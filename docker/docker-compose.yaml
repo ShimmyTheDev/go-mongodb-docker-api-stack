@@ -1,0 +1,80 @@
+version: "3.8"
+
+services:
+  mongodb:
+    container_name: mongodb
+    build: ./mongodb
+    volumes:
+      - mongo-data:/data/db
+      - ./mongodb/backups:/backups
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27017:27017"
+
+  minio:
+    container_name: minio
+    build: ./minio
+    volumes:
+      - minio-data:/data
+      - ./minio/backups:/backups
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_ACCESS_KEY}
+    command: server /data
+    ports:
+      - "9000:9000"
+
+  grafana:
+    container_name: grafana
+    build: ./grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+  loki:
+    image: grafana/loki:main
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ../docker/loki:/etc/loki
+      - loki-data:/var/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:main
+    container_name: promtail
+    volumes:
+      - ../docker/promtail:/etc/promtail
+      - /var/log:/var/log
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+
+  api:
+    container_name: api
+    build:
+      context: ../api
+    depends_on:
+      - mongodb
+      - minio
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/db
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    ports:
+      - "8000:8000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+volumes:
+  mongo-data:
+  minio-data:
+  grafana-data:
+  loki-data:
