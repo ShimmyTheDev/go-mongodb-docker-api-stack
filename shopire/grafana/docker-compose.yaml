@@ -1,6 +1,6 @@
 services:
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:main
     container_name: grafana
     ports:
       - "3000:3000"

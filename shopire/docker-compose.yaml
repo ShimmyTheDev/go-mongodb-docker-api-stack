@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mongodb:
     container_name: mongodb
@@ -21,7 +19,7 @@ services:
       - ./minio/backups:/backups
     environment:
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
     command: server /data
     ports:
       - "9000:9000"
@@ -39,8 +37,9 @@ services:
     container_name: loki
     ports:
       - "3100:3100"
+    user: "0"
     volumes:
-      - ../docker/loki:/etc/loki
+      - ../shopire/loki:/etc/loki
       - loki-data:/var/loki
     command: -config.file=/etc/loki/local-config.yaml
 
@@ -48,20 +47,19 @@ services:
     image: grafana/promtail:main
     container_name: promtail
     volumes:
-      - ../docker/promtail:/etc/promtail
+      - ../shopire/promtail:/etc/promtail
       - /var/log:/var/log
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yml
 
   api:
     container_name: api
-    build:
-      context: ../api
+    build: ../api
     depends_on:
       - mongodb
       - minio
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/db
+      - MONGO_URI=mongodb://mongodb:27017/${MONGODB_DB}
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
