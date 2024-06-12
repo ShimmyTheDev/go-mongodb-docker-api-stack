@@ -8,8 +8,8 @@ services:
       - minio-data:/data
       - ./backups:/backups
     environment:
-      - MINIO_ACCESS_KEY=youraccesskey
-      - MINIO_SECRET_KEY=yoursecretkey
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
     command: server /data
 
 volumes:
