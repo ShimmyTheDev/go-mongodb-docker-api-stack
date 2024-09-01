@@ -3,11 +3,4 @@ services:
     build: ../..
     ports:
       - "8000:8000"
-    depends_on:
-      - mongodb
-      - minio
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/db
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+

@@ -1,6 +1,17 @@
 services:
+  api:
+    container_name: API
+    build: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
+      - MONGODB_USER=${MONGODB_USER}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD}
+    volumes:
+      - ./api:/app
   mongodb:
-    container_name: mongodb
+    container_name: MongoDB
     build: ./mongodb
     volumes:
       - mongo-data:/data/db
@@ -10,69 +21,64 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - "27017:27017"
-
+    networks:
+      - docker-stack
+          
   minio:
-    container_name: minio
+    container_name: MinIO
     build: ./minio
     volumes:
       - minio-data:/data
       - ./minio/backups:/backups
     environment:
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
     command: server /data
     ports:
       - "9000:9000"
+    networks:
+      - docker-stack
 
   grafana:
-    container_name: grafana
+    container_name: Grafana
     build: ./grafana
     volumes:
       - grafana-data:/var/lib/grafana
     ports:
       - "3000:3000"
+    networks:
+      - docker-stack
 
   loki:
+    container_name: Loki
     image: grafana/loki:main
-    container_name: loki
     ports:
       - "3100:3100"
     user: "0"
     volumes:
-      - ../shopire/loki:/etc/loki
+      - ./loki:/etc/loki
       - loki-data:/var/loki
     command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - docker-stack
 
   promtail:
+    container_name: Promtail
     image: grafana/promtail:main
-    container_name: promtail
     volumes:
-      - ../shopire/promtail:/etc/promtail
+      - ./promtail/config.yml:/etc/promtail/config.yml
       - /var/log:/var/log
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yml
-
-  api:
-    container_name: api
-    build: ../api
-    depends_on:
-      - mongodb
-      - minio
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/${MONGODB_DB}
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-    ports:
-      - "8000:8000"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+    networks:
+      - docker-stack
 
 volumes:
   mongo-data:
   minio-data:
   grafana-data:
   loki-data:
+
+networks:
+  docker-stack:
+    driver: bridge
