@@ -16,7 +16,8 @@ An example of a a dockerized Go stack for self-hosted purpose.
 ##### Quickstart
 
 ```
-git clone https://github.com/przemyslawidzczak/docker-services \
+git clone https://github.com/ShimmyTheDev/go-mongodb-docker-api-stack \
+&& cd go-mongodb-docker-api-stack \
 && touch .env \
 && echo -e "MONGODB_DATABASE=database
 MONGODB_USER=db_user
@@ -29,7 +30,7 @@ MONGO_INITDB_ROOT_USERNAME=db_init_user
 MONGO_INITDB_ROOT_PASSSWORD=db_init_password
 MINIO_ACCESS_KEY=minio_access_key
 MINIO_SECRET_KEY=minio_secret_key" >> .env \
-&& cd docker-services/shopire && docker-compose up -d
+&& docker compose up -d
 ```
 
 ---
